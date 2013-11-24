@@ -1,5 +1,7 @@
 import sbtappengine.Plugin.{AppengineKeys => gae}
 
+import play.PlayProject
+
 name := "PlayFramework-AppEngine"
 
 scalaVersion := "2.10.2"
@@ -23,4 +25,4 @@ appengineSettings
   println("bye")
 }
 
-play.PlayProject.defaultPlaySettings
+PlayProject.defaultPlaySettings

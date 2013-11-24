@@ -1,25 +1,16 @@
-import sbtappengine.Plugin.{AppengineKeys => gae}
+organization := "com.siderakis"
 
-name := "PlayFramework-AppEngine"
+name := "playframework-appengine-routes"
 
 scalaVersion := "2.10.2"
 
-resolvers += "Scala AppEngine Sbt Repo" at "http://siderakis.github.com/maven"
-
 libraryDependencies ++= Seq(
-  "com.siderakis" %% "futuraes" % "0.1-SNAPSHOT",
-  "javax.servlet" % "servlet-api" % "2.5" % "provided",
-  "org.mortbay.jetty" % "jetty" % "6.1.22" % "container"
+	"com.github.scala-incubator.io" %% "scala-io-core" % "0.4.2",
+	"com.github.scala-incubator.io" %% "scala-io-file" % "0.4.2"	
 )
 
-appengineSettings
+sbtPlugin := true
 
-(gae.onStartHooks in gae.devServer in Compile) += { () =>
-  println("hello")
-}
+publishMavenStyle := true
 
-(gae.onStopHooks in gae.devServer in Compile) += { () =>
-  println("bye")
-}
-
-play.PlayProject.defaultPlaySettings
+publishTo := Some(Resolver.file("Local", Path.userHome / "siderakis.github.com" / "maven" asFile)(Patterns(true, Resolver.mavenStyleBasePattern)))
