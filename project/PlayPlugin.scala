@@ -46,7 +46,7 @@ trait PlaySettings {
   lazy val defaultPlaySettings = Seq[Setting[_]](
 
     routesImport := Seq.empty[String],
-    confDirectory <<= baseDirectory / "src/main/conf",
+    confDirectory <<= sourceDirectory / "main/conf",
 
     sourceGenerators in Compile <+= (state, confDirectory, sourceManaged in Compile, routesImport) map RouteFiles
   )

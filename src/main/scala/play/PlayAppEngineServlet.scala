@@ -1,3 +1,5 @@
+package play
+
 import javax.servlet.http.{HttpServletResponse, HttpServletRequest, HttpServlet}
 import play.api.http.Status
 import play.api.http.Status._

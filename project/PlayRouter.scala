@@ -452,7 +452,8 @@ object RoutesCompiler {
   }
 
   def generateRouter(path: String, hash: String, date: String, namespace: Option[String], additionalImports: Seq[String], rules: List[Rule]) =
-    """ |// @SOURCE:%s
+    """|package play
+      |// @SOURCE:%s
       |// @HASH:%s
       |// @DATE:%s
       |%s

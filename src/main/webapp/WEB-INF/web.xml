@@ -4,7 +4,7 @@
 
     <servlet>
         <servlet-name>PlayAppEngineServlet</servlet-name>
-        <servlet-class>PlayAppEngineServlet</servlet-class>
+        <servlet-class>play.PlayAppEngineServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>PlayAppEngineServlet</servlet-name>

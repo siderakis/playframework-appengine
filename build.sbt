@@ -1,11 +1,13 @@
 import sbtappengine.Plugin.{AppengineKeys => gae}
 
-name := "Futuraes"
+name := "PlayFramework-AppEngine"
 
 scalaVersion := "2.10.2"
 
+resolvers += "Scala AppEngine Sbt Repo" at "http://siderakis.github.com/maven"
+
 libraryDependencies ++= Seq(
-  "net.databinder" %% "unfiltered-filter" % "0.6.4",
+  "com.siderakis" %% "futuraes" % "0.1-SNAPSHOT",
   "javax.servlet" % "servlet-api" % "2.5" % "provided",
   "org.mortbay.jetty" % "jetty" % "6.1.22" % "container"
 )
