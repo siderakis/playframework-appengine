@@ -1,0 +1,3 @@
+GET 	/play							controllers.PlayController.index
+GET 	/play/:name						controllers.PlayController.hello(name: String)
+GET 	/hello      				    controllers.PlayController.hello2(name: String)
