@@ -1,9 +1,5 @@
 scalaVersion := "2.10.3"
 
-libraryDependencies += "com.github.scala-incubator.io" %% "scala-io-core" % "0.4.2"
-
-libraryDependencies += "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.2"
-
 resolvers += "Scala AppEngine Sbt Repo" at "http://siderakis.github.com/maven"
 
 addSbtPlugin("com.siderakis" %% "playframework-appengine-routes" % "0.1-SNAPSHOT")
