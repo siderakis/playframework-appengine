@@ -58,4 +58,11 @@ In `project/plugins.sbt`:
 	
 	
 
+
+#### Also check out these related scala projects that work great on App Engine:  
+
+[Twirl](https://github.com/spray/twirl) The Play framework Scala **template engine**, stand-alone and packaged as an SBT plugin
+
+[Play-Json-Standalone](https://github.com/mandubian/play-json-alone) Plays amazing JSON API, as a stand-alone library.
+ 
 	
