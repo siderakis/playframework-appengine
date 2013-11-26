@@ -69,6 +69,12 @@ In `project/plugins.sbt`:
 	
 
 
+## Implementation Details
+
+I decided not to include `BodyParsers` and `Action[A]` has been simplified to `Action` that operates on String content only.  I may inlcude BodyParsers later depending on how many dependencies there are.
+
+This port should work in any servlets envoirment, not just App Engine.
+
 #### Also check out these related scala projects that work great on App Engine:  
 
 [Twirl](https://github.com/spray/twirl) The Play framework Scala **template engine**, stand-alone and packaged as an SBT plugin
