@@ -13,7 +13,8 @@ case class HttpRequest(req: HttpServletRequest) extends RequestHeader {
 
   def method: String = req.getMethod
 
-
+  lazy val cookies = req.getCookies.map(c => c.getName -> c.getValue).toMap
+	
   def queryString: Map[String, Seq[String]] = {
     Option(req.getQueryString).map {
       _.split("&").foldLeft(Map[String, Seq[String]]().withDefaultValue(Seq.empty)) {
