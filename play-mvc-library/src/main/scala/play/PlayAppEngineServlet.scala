@@ -28,7 +28,7 @@ class PlayAppEngineServlet extends HttpServlet with Results {
 	}
   
 	override def doGet(req: HttpServletRequest, resp: HttpServletResponse) = {
-		  val request = HttpRequest(req)
+    val request = HttpRequest(req, resp)
       val handler = (generatedRoute orElse NotFoundPage)(request)
 			val result = handler(request)
       resp.setStatus(result.status)

@@ -1,5 +1,8 @@
 package play.api.mvc
 
+import play.api.mvc._
+import play.{Result, WithHeaders}
+
 
 /**
  * Provides helpers for creating `Action` values.
@@ -56,12 +59,8 @@ trait ActionBuilder {
 object Action extends ActionBuilder
 
 
-trait Result extends NotNull {
 
-  def body: String
-
-  val status: Int
-
-}
 
 trait Action extends Handler
+
+

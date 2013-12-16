@@ -2,8 +2,12 @@ package play
 
 import play.api.mvc._
 
-import scala.concurrent.Future
 import play.api.http.{HeaderNames, Status}
+import play.api.http.HeaderNames._
+
+import play.api.mvc.DiscardingCookie
+import play.api.mvc.Cookie
+import scala.collection.mutable
 
 
 /**
@@ -24,6 +28,8 @@ trait Controller extends Results with Status with HeaderNames {
 
 
 }
+
+case class ResponseExtras(cookies: mutable.Map[String, String] = mutable.Map())
 
 
 object Controller extends Controller
@@ -50,7 +56,6 @@ trait Response {
 /** Helper utilities to generate results. */
 trait Results {
 
-  import play.api._
   import play.api.http.Status._
   import play.api.http.HeaderNames._
 
@@ -60,23 +65,17 @@ trait Results {
    *
    * @param status the HTTP response status, e.g ‘200 OK’
    */
-  class Status(val status: Int) extends Result {
-    def body: String = "status=" + status.toString
+  class Status(override val status: Int) extends SimpleResult(header = ResponseHeader(status), body = "status=" + status.toString) {
 
+    def withHeaders(tuple: (String, String)) = this
 
     /**
      * Set the result's content.
      *
      * @param content content to send
      */
-    def apply(content: String): Result = {
-      new Result {
-        def body: String = content
+    def apply(content: String): Result = SimpleResult(ResponseHeader(status), content)
 
-        val status: Int = Status.this.status
-      }
-
-    }
 
   }
 
@@ -106,36 +105,36 @@ trait Results {
   /** Generates a ‘207 MULTI_STATUS’ result. */
   val MultiStatus = new Status(MULTI_STATUS)
 
-  //  /**
-  //   * Generates a ‘301 MOVED_PERMANENTLY’ simple result.
-  //   *
-  //   * @param url the URL to redirect to
-  //   */
-  //  def MovedPermanently(url: String): SimpleResult[Results.EmptyContent] = Redirect(url, MOVED_PERMANENTLY)
-  //
-  //  /**
-  //   * Generates a ‘302 FOUND’ simple result.
-  //   *
-  //   * @param url the URL to redirect to
-  //   */
-  //  def Found(url: String): SimpleResult[Results.EmptyContent] = Redirect(url, FOUND)
-  //
-  //  /**
-  //   * Generates a ‘303 SEE_OTHER’ simple result.
-  //   *
-  //   * @param url the URL to redirect to
-  //   */
-  //  def SeeOther(url: String): SimpleResult[Results.EmptyContent] = Redirect(url, SEE_OTHER)
-  //
-  //  /** Generates a ‘304 NOT_MODIFIED’ result. */
-  //  val NotModified = SimpleResult(header = ResponseHeader(NOT_MODIFIED), body = Enumerator(Results.EmptyContent()))
-  //
-  //  /**
-  //   * Generates a ‘307 TEMPORARY_REDIRECT’ simple result.
-  //   *
-  //   * @param url the URL to redirect to
-  //   */
-  //  def TemporaryRedirect(url: String): SimpleResult[Results.EmptyContent] = Redirect(url, TEMPORARY_REDIRECT)
+  /**
+   * Generates a ‘301 MOVED_PERMANENTLY’ simple result.
+   *
+   * @param url the URL to redirect to
+   */
+  def MovedPermanently(url: String): SimpleResult = Redirect(url, MOVED_PERMANENTLY)
+
+  /**
+   * Generates a ‘302 FOUND’ simple result.
+   *
+   * @param url the URL to redirect to
+   */
+  def Found(url: String): SimpleResult = Redirect(url, FOUND)
+
+  /**
+   * Generates a ‘303 SEE_OTHER’ simple result.
+   *
+   * @param url the URL to redirect to
+   */
+  def SeeOther(url: String): SimpleResult = Redirect(url, SEE_OTHER)
+
+  /** Generates a ‘304 NOT_MODIFIED’ result. */
+  val NotModified = SimpleResult(header = ResponseHeader(NOT_MODIFIED), body = "")
+
+  /**
+   * Generates a ‘307 TEMPORARY_REDIRECT’ simple result.
+   *
+   * @param url the URL to redirect to
+   */
+  def TemporaryRedirect(url: String): SimpleResult = Redirect(url, TEMPORARY_REDIRECT)
 
   /** Generates a ‘400 BAD_REQUEST’ result. */
   val BadRequest = new Status(BAD_REQUEST)
@@ -219,38 +218,260 @@ trait Results {
    */
   def Status(code: Int) = new Status(code)
 
-  //  /**
-  //   * Generates a redirect simple result.
-  //   *
-  //   * @param url the URL to redirect to
-  //   * @param status HTTP status
-  //   */
-  //  def Redirect(url: String, status: Int): SimpleResult[Results.EmptyContent] = Redirect(url, Map.empty, status)
-  //
-  //  /**
-  //   * Generates a redirect simple result.
-  //   *
-  //   * @param url the URL to redirect to
-  //   * @param queryString queryString parameters to add to the queryString
-  //   * @param status HTTP status
-  //   */
-  //  def Redirect(url: String, queryString: Map[String, Seq[String]] = Map.empty, status: Int = SEE_OTHER) = {
-  //    import java.net.URLEncoder
-  //    val fullUrl = url + Option(queryString).filterNot(_.isEmpty).map { params =>
-  //      (if (url.contains("?")) "&" else "?") + params.toSeq.flatMap { pair =>
-  //        pair._2.map(value => (pair._1 + "=" + URLEncoder.encode(value, "utf-8")))
-  //      }.mkString("&")
-  //    }.getOrElse("")
-  //    Status(status).withHeaders(LOCATION -> fullUrl)
-  //  }
-  //
-  //  /**
-  //   * Generates a redirect simple result.
-  //   *
-  //   * @param call Call defining the URL to redirect to, which typically comes from the reverse router
-  //   */
-  //  def Redirect(call: Call): SimpleResult[Results.EmptyContent] = Redirect(call.url)
+  /**
+   * Generates a redirect simple result.
+   *
+   * @param url the URL to redirect to
+   * @param status HTTP status
+   */
+  def Redirect(url: String, status: Int): SimpleResult = Redirect(url, Map.empty, status)
+
+  /**
+   * Generates a redirect simple result.
+   *
+   * @param url the URL to redirect to
+   * @param queryString queryString parameters to add to the queryString
+   * @param status HTTP status
+   */
+  def Redirect(url: String, queryString: Map[String, Seq[String]] = Map.empty, status: Int = SEE_OTHER) = {
+    import java.net.URLEncoder
+    val fullUrl = url + Option(queryString).filterNot(_.isEmpty).map {
+      params =>
+        (if (url.contains("?")) "&" else "?") + params.toSeq.flatMap {
+          pair =>
+            pair._2.map(value => (pair._1 + "=" + URLEncoder.encode(value, "utf-8")))
+        }.mkString("&")
+    }.getOrElse("")
+    Status(status).withHeaders(LOCATION -> fullUrl)
+  }
+
+  //    /**
+  //     * Generates a redirect simple result.
+  //     *
+  //     * @param call Call defining the URL to redirect to, which typically comes from the reverse router
+  //     */
+  //    def Redirect(call: Call): SimpleResult[Results.EmptyContent] = Redirect(call.url)
 
 }
 
+/**
+ * A simple HTTP response header, used for standard responses.
+ *
+ * @param status the response status, e.g. ‘200 OK’
+ * @param headers the HTTP headers
+ */
+case class ResponseHeader(status: Int, headers: Map[String, String] = Map.empty) {
 
+  override def toString = {
+    status + ", " + headers
+  }
+
+}
+
+/**
+ * A simple result, which defines the response header and a body ready to send to the client.
+ *
+ * @param header the response header, which contains status code and HTTP headers
+ * @param body the response body
+ */
+case class SimpleResult(header: ResponseHeader, body: String) extends PlainResult {
+
+  val status = header.status
+
+  /**
+   * Adds headers to this result.
+   *
+   * For example:
+   * {{{
+   * Ok("Hello world").withHeaders(ETAG -> "0")
+   * }}}
+   *
+   * @param headers the headers to add to this result.
+   * @return the new result
+   */
+  def withHeaders(headers: (String, String)*) = {
+    copy(header = header.copy(headers = header.headers ++ headers))
+  }
+
+  override def toString = {
+    "SimpleResult(" + header + ")"
+  }
+
+}
+
+sealed trait WithHeaders[+A <: Result] {
+  /**
+   * Adds HTTP headers to this result.
+   *
+   * For example:
+   * {{{
+   * Ok("Hello world").withHeaders(ETAG -> "0")
+   * }}}
+   *
+   * @param headers the headers to add to this result.
+   * @return the new result
+   */
+  def withHeaders(headers: (String, String)*): A
+
+  /**
+   * Adds cookies to this result.
+   *
+   * For example:
+   * {{{
+   * Ok("Hello world").withCookies(Cookie("theme", "blue"))
+   * }}}
+   *
+   * @param cookies the cookies to add to this result
+   * @return the new result
+   */
+  def withCookies(cookies: Cookie*): A
+
+
+  /**
+   * Discards cookies along this result.
+   *
+   * For example:
+   * {{{
+   * Ok("Hello world").discardingCookies("theme")
+   * }}}
+   *
+   * @param names the names of the cookies to discard along to this result
+   * @return the new result
+   */
+  @deprecated("This method can only discard cookies on the / path with no domain and without secure set.  Use discardingCookies(DiscardingCookie*) instead.", "2.1")
+  def discardingCookies(name: String, names: String*): A = discardingCookies((name :: names.toList).map(n => DiscardingCookie(n)): _*)
+
+  /**
+   * Discards cookies along this result.
+   *
+   * For example:
+   * {{{
+   * Ok("Hello world").discardingCookies(DiscardingCookie("theme"))
+   * }}}
+   *
+   * @param cookies the cookies to discard along to this result
+   * @return the new result
+   */
+  def discardingCookies(cookies: DiscardingCookie*): A
+
+
+  /**
+   * Changes the result content type.
+   *
+   * For example:
+   * {{{
+   * Ok("<text>Hello world</text>").as("text/xml")
+   * }}}
+   *
+   * @param contentType the new content type.
+   * @return the new result
+   */
+  def as(contentType: String): A
+}
+
+sealed trait Result extends NotNull with WithHeaders[Result] {
+    def body: String
+    val status: Int
+}
+
+/**
+ * A plain HTTP result.
+ */
+trait PlainResult extends Result with WithHeaders[PlainResult] {
+
+  /**
+   * The response header
+   */
+  val header: ResponseHeader
+
+  /**
+   * Adds cookies to this result.
+   *
+   * For example:
+   * {{{
+   * Ok("Hello world").withCookies(Cookie("theme", "blue"))
+   * }}}
+   *
+   * @param cookies the cookies to add to this result
+   * @return the new result
+   */
+  def withCookies(cookies: Cookie*): PlainResult = {
+    withHeaders(SET_COOKIE -> Cookies.merge(header.headers.get(SET_COOKIE).getOrElse(""), cookies))
+  }
+
+  /**
+   * Discards cookies along this result.
+   *
+   * For example:
+   * {{{
+   * Ok("Hello world").discardingCookies("theme")
+   * }}}
+   *
+   * @param cookies the cookies to discard along to this result
+   * @return the new result
+   */
+  def discardingCookies(cookies: DiscardingCookie*): PlainResult = {
+    withHeaders(SET_COOKIE -> Cookies.merge(header.headers.get(SET_COOKIE).getOrElse(""), cookies.map(_.toCookie)))
+  }
+
+
+  /**
+   * Changes the result content type.
+   *
+   * For example:
+   * {{{
+   * Ok("<text>Hello world</text>").as("text/xml")
+   * }}}
+   *
+   * @param contentType the new content type.
+   * @return the new result
+   */
+  def as(contentType: String): PlainResult = withHeaders(CONTENT_TYPE -> contentType)
+}
+
+object Cookies {
+
+  /**
+   * Extract cookies from the Set-Cookie header.
+   */
+  def apply(header: Option[String]) = new Cookies {
+
+    lazy val cookies: Map[String, Cookie] = header.map(Cookies.decode(_)).getOrElse(Seq.empty).groupBy(_.name).mapValues(_.head)
+
+    def get(name: String) = cookies.get(name)
+
+    override def toString = cookies.toString
+
+  }
+
+  /**
+   * Encodes cookies as a proper HTTP header.
+   *
+   * @param cookies the Cookies to encode
+   * @return a valid Set-Cookie header value
+   */
+  def encode(cookies: Seq[Cookie]): String = {
+    ""
+  }
+
+  /**
+   * Decodes a Set-Cookie header value as a proper cookie set.
+   *
+   * @param cookieHeader the Set-Cookie header value
+   * @return decoded cookies
+   */
+  def decode(cookieHeader: String): Seq[Cookie] = {
+    Seq()
+  }
+
+  /**
+   * Merges an existing Set-Cookie header with new cookie values
+   *
+   * @param cookieHeader the existing Set-Cookie header value
+   * @param cookies the new cookies to encode
+   * @return a valid Set-Cookie header value
+   */
+  def merge(cookieHeader: String, cookies: Seq[Cookie]): String = {
+    ""
+  }
+}
