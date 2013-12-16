@@ -67,6 +67,16 @@ In `project/plugins.sbt`:
 	GET 	/hello/:name				controllers.SimpleController.hello(name: String)
 	
 	
+### Update web.xml
+
+	<servlet>
+		<servlet-name>Play</servlet-name>
+		<servlet-class>play.PlayAppEngineServlet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>Play</servlet-name>
+		<url-pattern>/*</url-pattern>
+	</servlet-mapping>
 
 
 ## Implementation Details
