@@ -10,7 +10,7 @@ trait Request extends RequestHeader {
 
 case class HttpRequest(req: HttpServletRequest, resp: HttpServletResponse) extends RequestHeader {
 
-  def path: String = req.getServletPath + req.getPathInfo
+  def path: String = req.getServletPath + Option(req.getPathInfo).getOrElse("")
 
   def method: String = req.getMethod
 
