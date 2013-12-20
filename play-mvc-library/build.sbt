@@ -4,6 +4,8 @@ organization := "com.siderakis"
 
 name := "playframework-appengine-mvc"
 
+version := "0.2-SNAPSHOT"
+
 scalaVersion := "2.10.2"
 
 resolvers += "Scala AppEngine Sbt Repo" at "http://siderakis.github.com/maven"

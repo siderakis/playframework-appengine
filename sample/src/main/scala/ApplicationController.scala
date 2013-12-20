@@ -1,7 +1,8 @@
 package controllers
 
-import play.api.mvc.{Result, Action}
+import play.api.mvc.{Cookie, Action}
 import play.Controller
+import javax.servlet.http.HttpServletRequest
 
 /**
  * User: nick
@@ -14,11 +15,19 @@ object PlayController extends Controller {
   }
 
   def hello(name: String) = Action {
-    Ok("Hello " + name)
+    Ok(s"Hello $name")
   }
 
-  def hello2(name: String) = Action {
-    Accepted("Hello mello " + name)
+  def meow(name: String) = Action {
+    request =>
+
+    //can access HttpServletRequest and HttpServletResponse directly
+      val servletReq: HttpServletRequest = request.req
+      val contentType = servletReq.getContentType
+
+      Accepted(s"$name says meow").
+        withCookies(new Cookie("i_can_haz", "cookies")).
+        withHeaders(CONTENT_TYPE -> contentType)
   }
 
 
