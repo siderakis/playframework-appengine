@@ -1,6 +1,5 @@
 package play
 
-import play.api.mvc._
 
 import play.api.http.{HeaderNames, Status}
 import play.api.http.HeaderNames._
@@ -93,11 +92,11 @@ trait Results {
   /** Generates a ‘203 NON_AUTHORITATIVE_INFORMATION’ result. */
   val NonAuthoritativeInformation = new Status(NON_AUTHORITATIVE_INFORMATION)
 
-  //  /** Generates a ‘204 NO_CONTENT’ result. */
-  //  val NoContent = SimpleResult(header = ResponseHeader(NO_CONTENT), body = Enumerator(Results.EmptyContent()))
-  //
-  //  /** Generates a ‘205 RESET_CONTENT’ result. */
-  //  val ResetContent = SimpleResult(header = ResponseHeader(RESET_CONTENT), body = Enumerator(Results.EmptyContent()))
+  /** Generates a ‘204 NO_CONTENT’ result. */
+  val NoContent = SimpleResult(header = ResponseHeader(NO_CONTENT), body = "")
+
+  /** Generates a ‘205 RESET_CONTENT’ result. */
+  val ResetContent = SimpleResult(header = ResponseHeader(RESET_CONTENT), body = "")
 
   /** Generates a ‘206 PARTIAL_CONTENT’ result. */
   val PartialContent = new Status(PARTIAL_CONTENT)
@@ -250,7 +249,7 @@ trait Results {
   //     *
   //     * @param call Call defining the URL to redirect to, which typically comes from the reverse router
   //     */
-  //    def Redirect(call: Call): SimpleResult[Results.EmptyContent] = Redirect(call.url)
+  //      def Redirect(call: Call): SimpleResult = Redirect(call.url)
 
 }
 
@@ -274,7 +273,7 @@ case class ResponseHeader(status: Int, headers: Map[String, String] = Map.empty)
  * @param header the response header, which contains status code and HTTP headers
  * @param body the response body
  */
-case class SimpleResult(header: ResponseHeader, body: String) extends PlainResult {
+case class SimpleResult(header: ResponseHeader, body: String, cookies: mutable.Set[Cookie] = mutable.Set[Cookie]()) extends PlainResult {
 
   val status = header.status
 
@@ -326,21 +325,6 @@ sealed trait WithHeaders[+A <: Result] {
    */
   def withCookies(cookies: Cookie*): A
 
-
-  /**
-   * Discards cookies along this result.
-   *
-   * For example:
-   * {{{
-   * Ok("Hello world").discardingCookies("theme")
-   * }}}
-   *
-   * @param names the names of the cookies to discard along to this result
-   * @return the new result
-   */
-  @deprecated("This method can only discard cookies on the / path with no domain and without secure set.  Use discardingCookies(DiscardingCookie*) instead.", "2.1")
-  def discardingCookies(name: String, names: String*): A = discardingCookies((name :: names.toList).map(n => DiscardingCookie(n)): _*)
-
   /**
    * Discards cookies along this result.
    *
@@ -370,8 +354,11 @@ sealed trait WithHeaders[+A <: Result] {
 }
 
 sealed trait Result extends NotNull with WithHeaders[Result] {
-    def body: String
-    val status: Int
+  def body: String
+
+  val status: Int
+
+  val cookies: mutable.Set[Cookie]
 }
 
 /**
@@ -396,7 +383,8 @@ trait PlainResult extends Result with WithHeaders[PlainResult] {
    * @return the new result
    */
   def withCookies(cookies: Cookie*): PlainResult = {
-    withHeaders(SET_COOKIE -> Cookies.merge(header.headers.get(SET_COOKIE).getOrElse(""), cookies))
+    this.cookies ++= cookies
+    this
   }
 
   /**
@@ -411,7 +399,9 @@ trait PlainResult extends Result with WithHeaders[PlainResult] {
    * @return the new result
    */
   def discardingCookies(cookies: DiscardingCookie*): PlainResult = {
-    withHeaders(SET_COOKIE -> Cookies.merge(header.headers.get(SET_COOKIE).getOrElse(""), cookies.map(_.toCookie)))
+    val names = cookies.map(_.name)
+    this.cookies.retain(c => !names.contains(c.name))
+    this
   }
 
 
@@ -427,51 +417,4 @@ trait PlainResult extends Result with WithHeaders[PlainResult] {
    * @return the new result
    */
   def as(contentType: String): PlainResult = withHeaders(CONTENT_TYPE -> contentType)
-}
-
-object Cookies {
-
-  /**
-   * Extract cookies from the Set-Cookie header.
-   */
-  def apply(header: Option[String]) = new Cookies {
-
-    lazy val cookies: Map[String, Cookie] = header.map(Cookies.decode(_)).getOrElse(Seq.empty).groupBy(_.name).mapValues(_.head)
-
-    def get(name: String) = cookies.get(name)
-
-    override def toString = cookies.toString
-
-  }
-
-  /**
-   * Encodes cookies as a proper HTTP header.
-   *
-   * @param cookies the Cookies to encode
-   * @return a valid Set-Cookie header value
-   */
-  def encode(cookies: Seq[Cookie]): String = {
-    ""
-  }
-
-  /**
-   * Decodes a Set-Cookie header value as a proper cookie set.
-   *
-   * @param cookieHeader the Set-Cookie header value
-   * @return decoded cookies
-   */
-  def decode(cookieHeader: String): Seq[Cookie] = {
-    Seq()
-  }
-
-  /**
-   * Merges an existing Set-Cookie header with new cookie values
-   *
-   * @param cookieHeader the existing Set-Cookie header value
-   * @param cookies the new cookies to encode
-   * @return a valid Set-Cookie header value
-   */
-  def merge(cookieHeader: String, cookies: Seq[Cookie]): String = {
-    ""
-  }
 }
