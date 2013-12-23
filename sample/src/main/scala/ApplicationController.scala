@@ -1,6 +1,6 @@
 package controllers
 
-import play.api.mvc.{Cookie, Action}
+import play.api.mvc.{DiscardingCookie, Cookie, Action}
 import play.Controller
 import javax.servlet.http.HttpServletRequest
 
@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletRequest
 object PlayController extends Controller {
 
   def index = Action {
-    Ok("Simple Index")
+    Ok("Simple Index").as("text")
   }
 
   def hello(name: String) = Action {
@@ -25,9 +25,16 @@ object PlayController extends Controller {
       val servletReq: HttpServletRequest = request.req
       val contentType = servletReq.getContentType
 
-      Accepted(s"$name says meow").
-        withCookies(new Cookie("i_can_haz", "cookies")).
-        withHeaders(CONTENT_TYPE -> contentType)
+      if (name == "kitty")
+        Accepted(s"$name says meow").
+          withCookies(new Cookie("i_can_haz", "cookies")).
+          withHeaders(CONTENT_TYPE -> contentType)
+      else
+        NotAcceptable(s"sorry $name, <b>kitties</b> only").
+          withHeaders("do_try" -> "kitty").
+          discardingCookies(DiscardingCookie("i_can_haz")).
+          as("text/html")
+
   }
 
 
