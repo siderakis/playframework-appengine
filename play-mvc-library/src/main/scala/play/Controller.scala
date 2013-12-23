@@ -64,9 +64,8 @@ trait Results {
    *
    * @param status the HTTP response status, e.g ‘200 OK’
    */
-  class Status(override val status: Int) extends SimpleResult(header = ResponseHeader(status), body = "status=" + status.toString) {
+  class Status(override val status: Int) extends SimpleResult(header = ResponseHeader(status), body = "") {
 
-    def withHeaders(tuple: (String, String)) = this
 
     /**
      * Set the result's content.
@@ -359,6 +358,8 @@ sealed trait Result extends NotNull with WithHeaders[Result] {
   val status: Int
 
   val cookies: mutable.Set[Cookie]
+
+  val header: ResponseHeader
 }
 
 /**
