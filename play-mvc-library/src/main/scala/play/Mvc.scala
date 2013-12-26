@@ -1,7 +1,8 @@
 package play.api.mvc
 
-import play.api.mvc._
-import play.{Result, WithHeaders}
+import play.Result
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration._
 
 
 /**
@@ -51,14 +52,28 @@ trait ActionBuilder {
    */
   def apply(block: => Result): Action = apply(_ => block)
 
+
+  def async(block: RequestHeader => Future[Result]): Action = new Action {
+
+    def apply(ctx: RequestHeader) = try {
+      Await.result(block(ctx), 1 hour)
+    } catch {
+      // NotImplementedError is not caught by NonFatal, wrap it
+      case e: NotImplementedError => throw new RuntimeException(e)
+      // LinkageError is similarly harmless in Play Framework, since automatic reloading could easily trigger it
+      case e: LinkageError => throw new RuntimeException(e)
+    }
+  }
+
+  def async(block: => Future[Result]): Action = async(_ => block)
+
+
 }
 
 /**
  * Helper object to create `Action` values.
  */
 object Action extends ActionBuilder
-
-
 
 
 trait Action extends Handler
