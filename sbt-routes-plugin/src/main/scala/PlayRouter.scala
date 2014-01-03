@@ -7,6 +7,7 @@ package play.router
 import scala.util.parsing.input._
 import scala.util.parsing.combinator._
 import scala.util.matching._
+import scala.collection.immutable.ListMap
 
 /**
  * captures URL parts
@@ -440,8 +441,14 @@ object RoutesCompiler {
 
     val files = Seq(filePrefix + "_routing.scala" -> generateRouter(path, hash, date, namespace, additionalImports, rules))
 
+    if (reverseRouter) {
+      (files :+ filePrefix + "_reverseRouting.scala" -> generateReverseRouter(path, hash, date, namespace, additionalImports, routes, namespaceReverseRouter))
+    } else {
       files
+    }
   }
+
+
 
   private def prefixImport(i: String): String = {
     if (!i.startsWith("_root_.")) {
@@ -500,8 +507,209 @@ object RoutesCompiler {
     )
 
 
+  def generateReverseRouter(path: String, hash: String, date: String, namespace: Option[String], additionalImports: Seq[String], routes: List[Route], namespaceReverseRouter: Boolean) =
+    """ |// @SOURCE:%s
+      |// @HASH:%s
+      |// @DATE:%s
+      |
+      |import play.Routes
+      |import %sRoutes.{prefix => _prefix, defaultPrefix => _defaultPrefix}
+      |import play.core._
+      |import play.core.Router._
+      |
+      |import play.api.mvc._
+      |%s
+      |
+      |import Router.queryString
+      |
+      |%s
+      |
+      |%s
+      |
+    """.stripMargin.format(
+      path,
+      hash,
+      date,
+      namespace.map(_ + ".").getOrElse(""),
+      additionalImports.map(prefixImport).map("import " + _).mkString("\n"),
+      reverseRouting(routes, namespace.filter(_ => namespaceReverseRouter)),
+      ""
+    )
 
+  /**
+   * Generate the reverse routing operations
+   */
+  def reverseRouting(routes: List[Route], namespace: Option[String]): String = {
 
+    routes.groupBy(_.call.packageName).map {
+      case (packageName, routes) => {
+
+        """
+          |%s
+          |package %s {
+          |%s
+          |}
+        """.stripMargin.format(
+          markLines(routes: _*),
+          namespace.map(_ + "." + packageName).getOrElse(packageName),
+
+          routes.groupBy(_.call.controller).map {
+            case (controller, routes) =>
+              """
+                |%s
+                |class Reverse%s {
+                |
+                |%s
+                |
+                |}
+              """.stripMargin.format(
+                markLines(routes: _*),
+
+                // alias
+                controller.replace(".", "_"),
+
+                // reverse method
+                routes.groupBy(r => (r.call.method, r.call.parameters.getOrElse(Nil).map(p => p.typeName))).map {
+                  case ((m, _), routes) =>
+
+                    assert(routes.size > 0, "Empty routes set???")
+
+                    val parameters = routes(0).call.parameters.getOrElse(Nil)
+
+                    val reverseParameters = parameters.zipWithIndex.filterNot {
+                      case (p, i) => {
+                        val fixeds = routes.map(_.call.parameters.get(i).fixed).distinct
+                        fixeds.size == 1 && fixeds(0) != None
+                      }
+                    }
+
+                    val reverseSignature = reverseParameters.map(p => safeKeyword(p._1.name) + ":" + p._1.typeName + {
+                      Option(routes.map(_.call.parameters.get(p._2).default).distinct).filter(_.size == 1).flatMap(_.headOption).map {
+                        case None => ""
+                        case Some(default) => " = " + default
+                      }.getOrElse("")
+                    }).mkString(", ")
+
+                    def genCall(route: Route, localNames: Map[String, String] = Map()) = """Call("%s", %s%s)""".format(
+                    route.verb.value,
+                    "_prefix" + { if (route.path.parts.isEmpty) "" else """ + { _defaultPrefix } + """ } + route.path.parts.map {
+                      case StaticPart(part) => "\"" + part + "\""
+                      case DynamicPart(name, _, encode) => {
+                        route.call.parameters.getOrElse(Nil).find(_.name == name).map { param =>
+                          if (encode && encodeable(param.typeName))
+                            """implicitly[PathBindable[""" + param.typeName + """]].unbind("""" + param.name + """", dynamicString(""" + safeKeyword(localNames.get(param.name).getOrElse(param.name)) + """))"""
+                          else
+                            """implicitly[PathBindable[""" + param.typeName + """]].unbind("""" + param.name + """", """ + safeKeyword(localNames.get(param.name).getOrElse(param.name)) + """)"""
+                        }.getOrElse {
+                          throw new Error("missing key " + name)
+                        }
+
+                      }
+                    }.mkString(" + "),
+
+                    {
+                      val queryParams = route.call.parameters.getOrElse(Nil).filterNot { p =>
+                        p.fixed.isDefined ||
+                          route.path.parts.collect {
+                            case DynamicPart(name, _, _) => name
+                          }.contains(p.name)
+                      }
+
+                      if (queryParams.size == 0) {
+                        ""
+                      } else {
+                        """ + queryString(List(%s))""".format(
+                          queryParams.map { p =>
+                            ("""implicitly[QueryStringBindable[""" + p.typeName + """]].unbind("""" + p.name + """", """ + safeKeyword(localNames.get(p.name).getOrElse(p.name)) + """)""") -> p
+                          }.map {
+                            case (u, Parameter(name, typeName, None, Some(default))) => """if(""" + localNames.get(name).getOrElse(name) + """ == """ + default + """) None else Some(""" + u + """)"""
+                            case (u, Parameter(name, typeName, None, None)) => "Some(" + u + ")"
+                          }.mkString(", "))
+
+                      }
+
+                    })
+
+                    routes match {
+
+                      case Seq(route) => {
+                        """
+                          |%s
+                          |def %s(%s): Call = {
+                          |   %s
+                          |}
+                        """.stripMargin.format(
+                          markLines(route),
+                          route.call.method,
+                          reverseSignature,
+                          genCall(route))
+                      }
+
+                      case Seq(route, routes @ _*) => {
+                        """
+                          |%s
+                          |def %s(%s): Call = {
+                          |   (%s) match {
+                          |%s
+                          |   }
+                          |}
+                        """.stripMargin.format(
+                          markLines((route +: routes): _*),
+                          route.call.method,
+                          reverseSignature,
+                          reverseParameters.map(x => safeKeyword(x._1.name) + ": @unchecked").mkString(", "),
+
+                          // route selection
+                          // We will generate a list of routes. Then we should remove duplicates from them.
+                          // Routes are considered duplicates if parameters and parameters contraints (see
+                          // definition below) are identical.
+                          //
+                          // We will generate a seq of route then pass to ListMap (to preserve order) to have
+                          // a distinctBy we control then get the values of this map.
+                          ListMap((route +: routes).map { route =>
+
+                            val localNames = reverseParameters.map {
+                              case (lp, i) => route.call.parameters.get(i).name -> lp.name
+                            }.toMap
+
+                            val markers = markLines(route)
+
+                            // Routes like /dummy controllers.Application.dummy(foo: String)
+                            // foo is the parameter
+                            val parameters = reverseParameters.map(x => safeKeyword(x._1.name)).mkString(", ")
+
+                            // Routes like /dummy controllers.Application.dummy(foo = "bar")
+                            // foo = "bar" is a constraint
+                            val parametersContraints = route.call.parameters.getOrElse(Nil).filter { p =>
+                              localNames.contains(p.name) && p.fixed.isDefined
+                            }.map { p =>
+                              p.name + " == " + p.fixed.get
+                            } match {
+                              case Nil => ""
+                              case nonEmpty => "if " + nonEmpty.mkString(" && ")
+                            }
+
+                            val call = genCall(route, localNames)
+
+                            val result = """|%s
+                                           |case (%s) %s => %s
+                                         """.stripMargin.format(markers, parameters, parametersContraints, call)
+
+                            (parameters -> parametersContraints) -> result
+                          }: _*).values
+                            .mkString("\n"))
+                      }
+
+                    }
+
+                }.mkString("\n")
+              )
+          }.mkString("\n")
+        )
+      }
+    }.mkString("\n")
+
+  }
 
   /**
    * Generate the routes definitions

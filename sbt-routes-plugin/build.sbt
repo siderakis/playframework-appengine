@@ -1,5 +1,7 @@
 organization := "com.siderakis"
 
+version := "0.2-SNAPSHOT"
+
 name := "playframework-appengine-routes"
 
 scalaVersion := "2.10.2"
