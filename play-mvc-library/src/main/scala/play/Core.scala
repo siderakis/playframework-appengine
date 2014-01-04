@@ -7,6 +7,7 @@ import play.core.StaticPart
 import play.core.PathPattern
 import play.api.http.Status
 import play.Controller
+import play.utils.UriEncoding
 
 //import play.api.mvc.Results._
 
@@ -14,7 +15,7 @@ import play.Controller
 import scala.util.parsing.input._
 import scala.util.parsing.combinator._
 import scala.util.matching._
-import java.net.URI
+import java.net.{URLEncoder, URI}
 import scala.util.control.Exception
 
 trait PathPart
@@ -118,6 +119,10 @@ object Router {
 
     }
 
+  }
+
+  def dynamicString(dynamic: String): String = {
+    UriEncoding.encodePathSegment(dynamic, "utf-8")
   }
 
   //  object Include {

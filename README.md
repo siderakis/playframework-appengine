@@ -83,7 +83,7 @@ In `project/plugins.sbt`:
 
 I decided not to include `BodyParsers` and `Action[A]` has been simplified to `Action` that operates on String content only.  I may inlcude BodyParsers later depending on how many dependencies there are.
 
-This port should work in any servlets envoirment, not just App Engine.
+This port should work in any Servlet 2.5 envoirment, not just App Engine.
 
 #### Also check out these related scala projects that work great on App Engine:  
 
