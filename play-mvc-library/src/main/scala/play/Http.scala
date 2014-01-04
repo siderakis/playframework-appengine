@@ -14,14 +14,14 @@ case class HttpRequest(req: HttpServletRequest, resp: HttpServletResponse) exten
 
   def method: String = req.getMethod
 
-  def cookies = req.getCookies.map(c => c.getName -> c.getValue).toMap
-	
+  def cookies = Option(req.getCookies).map(_.map(c => c.getName -> c.getValue).toMap) getOrElse Map()
+
   def queryString: Map[String, Seq[String]] = {
     Option(req.getQueryString).map {
       _.split("&").foldLeft(Map[String, Seq[String]]().withDefaultValue(Seq.empty)) {
         (map, pair) =>
-          val kv = pair.split("=")
-          map.updated(kv(0), map(kv(0)) ++ Seq(kv(1)))
+          val (k, v) = pair.span(_ == '=')
+          map.updated(k, map(k) ++ Seq(v))
       }
     }.getOrElse(Map())
   }

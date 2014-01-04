@@ -28,9 +28,6 @@ trait Controller extends Results with Status with HeaderNames {
 
 }
 
-case class ResponseExtras(cookies: mutable.Map[String, String] = mutable.Map())
-
-
 object Controller extends Controller
 
 /** Helper utilities to generate results. */

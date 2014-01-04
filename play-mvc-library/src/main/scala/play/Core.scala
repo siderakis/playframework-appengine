@@ -103,10 +103,10 @@ object Router {
     def apply(method: String, pathPattern: PathPattern) = new ParamsExtractor {
 
       def unapply(request: RequestHeader): Option[RouteParams] = {
-        println("\n\npath: " + request.path)
-        println("queryString: " + request.queryString)
+//        println("\n\npath: " + request.path)
+//        println("queryString: " + request.queryString)
         if (method == request.method) {
-          println("pathPattern: " + pathPattern)
+//          println("pathPattern: " + pathPattern)
           pathPattern(request.path).map {
             groups =>
               RouteParams(groups, request.queryString)
