@@ -24,10 +24,11 @@ class PlayAppEngineServlet extends HttpServlet with Results {
     val request = HttpRequest(req, resp)
     val handler = (generatedRoute orElse NotFoundPage)(request)
     val result = handler(request)
+    resp.setCharacterEncoding("utf-8")
     resp.setStatus(result.status)
     result.cookies.map(c => new Cookie(c.name, c.value)).foreach(resp.addCookie)
     result.header.headers.foreach(t => resp.addHeader(t._1, t._2))
-    resp.getOutputStream.print(result.body)
+    resp.getWriter.print(result.body)
   }
 
   override def doPost(req: HttpServletRequest, resp: HttpServletResponse) = doGet(req, resp)
