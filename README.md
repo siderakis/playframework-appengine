@@ -7,8 +7,8 @@ Adapting the Play Framework's Core/MVC/Routing to work on Google App Engine
 ##Status
 
 1. Route Plugin (done)
-2. MVC, Action, Request, Response API ported to Servlets 2.5 (basics done, aysnc action in-progress)
-3. Reverse Routing (not started but planned)
+2. MVC, Action, Request, Response API ported to Servlets 2.5 (basics working)
+3. Reverse Routing (working)
 
 Scala 2.10
 Sbt 0.13
