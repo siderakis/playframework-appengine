@@ -2,7 +2,7 @@ package scala.concurrent.impl
 
 
 import java.util.concurrent._
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{Await, ExecutionContextExecutor}
 import com.google.appengine.api.ThreadManager
 import scala.collection.mutable
 
@@ -47,7 +47,18 @@ class ExecutionContextAppEngineImpl2(es: Executor, reporter: Throwable => Unit) 
     //    }
   }
 
-  def execute(runnable: Runnable): Unit = executor execute runnable
+  import scala.concurrent.duration._
+
+  def execute(runnable: Runnable): Unit = runnable match {
+    case e: PromiseCompletingRunnables[_] =>
+      println("a" * 10)
+      executor execute runnable
+      Await.ready(e.promise,1 minute)
+
+    case o =>
+      println("b" * 10)
+      executor execute o
+  }
 
   def reportFailure(t: Throwable) = reporter(t)
 }

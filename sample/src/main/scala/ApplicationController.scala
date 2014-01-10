@@ -7,7 +7,7 @@ import scala.concurrent._
 import play.api.mvc.DiscardingCookie
 import play.api.mvc.Cookie
 import java.util.concurrent.Executor
-import scala.concurrent.impl.ExecutionContextAppEngineImpl2
+import scala.concurrent.impl.{Futures, ExecutionContextAppEngineImpl2}
 
 /**
  * User: nick
@@ -29,11 +29,11 @@ object PlayController extends Controller {
 
     implicit lazy val z: ExecutionContextAppEngineImpl2 = new ExecutionContextAppEngineImpl2(null: Executor, (Throwable) => {})
 
-    future {
+    Futures {
       Thread.sleep(2000)
       println("Thread (1) == " + Thread.currentThread().getName)
 
-      future{
+      Futures{
         Thread.sleep(2000)
         println("Thread (2) == " + Thread.currentThread().getName)
 
