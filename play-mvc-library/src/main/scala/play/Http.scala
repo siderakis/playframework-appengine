@@ -21,8 +21,8 @@ case class HttpRequest(req: HttpServletRequest, resp: HttpServletResponse) exten
     Option(req.getQueryString).map {
       _.split("&").foldLeft(Map[String, Seq[String]]().withDefaultValue(Seq.empty)) {
         (map, pair) =>
-          val (k, v) = pair.span(_ == '=')
-          map.updated(k, map(k) ++ Seq(v))
+          val (k, v) = pair.span(_ != '=')
+          map.updated(k, map(k) ++ Seq(v.drop(1)))
       }
     }.getOrElse(Map())
   }
