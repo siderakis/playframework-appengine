@@ -16,6 +16,13 @@ Play 2.3
 
 ## Getting started 
 
+### App Engine SDK
+
+Download and install the App Engine SDK, then add the following to your `bash.rc`:
+
+    export APPENGINE_SDK_HOME=go~/Applications/appengine-java-sdk-1.9.0
+
+
 ### Adding dependencies
 
 In `build.sbt`:
