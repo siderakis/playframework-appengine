@@ -11,7 +11,8 @@ scalaVersion := "2.10.2"
 resolvers += "Scala AppEngine Sbt Repo" at "http://siderakis.github.com/maven"
 
 libraryDependencies ++= Seq(
-  "javax.servlet" % "servlet-api" % "2.5" % "provided"
+  "javax.servlet" % "servlet-api" % "2.5" % "provided",
+  "org.specs2" %% "specs2" % "2.3.10" % "test"
 )
 
 publishMavenStyle := true

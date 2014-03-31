@@ -3,6 +3,8 @@ package play.api.mvc
 import javax.servlet.http.{HttpServletResponse, HttpServletRequest}
 import play.Result
 import play.api.http.HeaderNames
+import play.core.parsers.FormUrlEncodedParser
+import scala.io.Source
 
 
 trait Request extends RequestHeader {
@@ -17,7 +19,7 @@ case class HttpRequest(req: HttpServletRequest, resp: HttpServletResponse) exten
 
   def cookies = Option(req.getCookies).map(_.map(c => c.getName -> c.getValue).toMap) getOrElse Map()
 
-  def queryString: Map[String, Seq[String]] = {
+  lazy val queryString: Map[String, Seq[String]] = {
     Option(req.getQueryString).map {
       _.split("&").foldLeft(Map[String, Seq[String]]().withDefaultValue(Seq.empty)) {
         (map, pair) =>
@@ -26,6 +28,10 @@ case class HttpRequest(req: HttpServletRequest, resp: HttpServletResponse) exten
       }
     }.getOrElse(Map())
   }
+
+  lazy val bodyAsFormUrlEncoded = FormUrlEncodedParser.parse(body)
+
+  lazy val body = Source.fromInputStream(req.getInputStream).mkString
 
   /**
    * The HTTP host (domain, optionally port)
