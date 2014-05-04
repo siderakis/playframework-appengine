@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dispatch-entries>
+    <dispatch>
+        <!-- Default module serves the typical web resources and all static resources. -->
+        <url>*</url>
+        <module>default</module>
+    </dispatch>
+    <dispatch>
+        <!-- Default module serves simple hostname request. -->
+        <url>*/favicon.ico</url>
+        <module>default</module>
+    </dispatch>
+</dispatch-entries>

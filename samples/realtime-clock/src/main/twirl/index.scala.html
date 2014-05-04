@@ -1,0 +1,36 @@
+@(token:String)
+@main {
+
+<h1>Comet clock</h1>
+
+<h1 id="clock"></h1>
+
+<p>
+    Clock events are pushed from the Server using a Comet connection.
+</p>
+
+<script type="text/javascript" charset="utf-8">
+
+    // Called for each Comet message
+    var clockChanged = function(time) {
+        var html = time.data.replace(/(\d)/g, '<span>$1</span>');;
+        $('#clock').html(html);
+    }
+
+    $('#clock').html('loading');
+
+    var printVal = function(data){
+        console.log(data);
+    }
+
+    channel = new goog.appengine.Channel('@token');
+    socket = channel.open();
+//    socket.onopen = printVal;
+    socket.onmessage = clockChanged;
+//    socket.onerror = printVal;
+//    socket.onclose = printVal;
+</script>
+
+ <!--<iframe id="comet" src="@@routes.Application.liveClock.unique"></iframe>-->
+
+}

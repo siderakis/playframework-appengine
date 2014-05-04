@@ -78,27 +78,5 @@ object PlayController extends Controller {
     def resp: HttpServletResponse = request.resp
   }
 
-  case class AuthenticatedRequest(user: User, request: RequestHeader) extends WrappedRequest(request)
-
-  object Authenticated {
-    def apply(block: AuthenticatedRequest => Result): Action = new Action {
-      def apply(ctx: RequestHeader) = {
-        // Check authentication
-        if (UserServiceFactory.getUserService.isUserAdmin) {
-          val user = UserServiceFactory.getUserService.getCurrentUser
-          block(AuthenticatedRequest(user, ctx))
-        } else {
-          NotAcceptable
-        }
-
-      }
-    }
-  }
-
-  def auth = Authenticated {
-    request =>
-      Ok("hello, " + request.user.getNickname)
-  }
-
 
 }
