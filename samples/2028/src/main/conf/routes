@@ -5,9 +5,6 @@
 # Home page
 GET     /                           controllers.Application.index
 
-# The clock Comet stream
-GET     /clock                      controllers.Application.liveClock
-
 
 POST    /_ah/channel/connected/     controllers.Application.connected
 POST    /_ah/channel/disconnected/  controllers.Application.connected

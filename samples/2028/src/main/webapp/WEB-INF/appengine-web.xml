@@ -2,13 +2,8 @@
 <appengine-web-app xmlns="http://appengine.google.com/ns/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://kenai.com/projects/nbappengine/downloads/download/schema/appengine-web.xsd appengine-web.xsd">
     <application>ns-labs</application>
     <module>default</module>
-    <version>playframework-appengine-clock</version>
+    <version>playframework-appengine-2048</version>
     <threadsafe>true</threadsafe>
-    <instance-class>B1</instance-class>
-    <manual-scaling>
-        <instances>1</instances>
-    </manual-scaling>
-
     <inbound-services>
         <service>channel_presence</service>
     </inbound-services>
