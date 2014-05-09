@@ -7,11 +7,12 @@ import java.util.Date
 import twirl.api.Html
 import com.google.appengine.api.ThreadManager
 import play.api.libs.iteratee
-import scala.util.{Failure, Success, Try}
+import scala.util.{Random, Failure, Success, Try}
 import scala.Some
 import scala.Some
 import play.api.libs.iteratee.Enumeratee.CheckDone
 import scala.collection.mutable
+import scala.io.Source
 
 //import play.api.libs.Comet
 
@@ -47,6 +48,7 @@ import ExecutionContextAE.ImplicitsAE._
 object Application extends Controller {
 
 
+  val connectedSet = mutable.Set[String]()
 
   def connected() = Action {
     req =>
@@ -54,16 +56,35 @@ object Application extends Controller {
       val did = if (who.isConnected) "connected" else "disconnected"
       println(s"${who.clientId} just $did")
       if (who.isConnected) {
+        connectedSet.add(who.clientId())
         // store connected state for each token?
-       // doBackgroundStuff(who.clientId())
+        // doBackgroundStuff(who.clientId())
       } else {
-//        present.update("foo", present("foo") - token)
+        connectedSet.remove(who.clientId())
+        //        present.update("foo", present("foo") - token)
       }
       Ok("")
   }
 
+  def move() = Action {
+
+    req =>
+      val body = Source.fromInputStream(req.req.getInputStream).mkString
+      println(body)
+
+      val channelService = ChannelServiceFactory.getChannelService
+
+      connectedSet.
+        map(new ChannelMessage(_, body)).
+        foreach(channelService.sendMessage)
+
+      Ok("")
+
+
+  }
+
   def index() = Action {
-    val token = ChannelServiceFactory.getChannelService.createChannel("foo")
+    val token = ChannelServiceFactory.getChannelService.createChannel(Random.alphanumeric.take(10).mkString)
 
     Ok(html.index.render(token).toString)
   }

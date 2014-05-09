@@ -4,6 +4,7 @@
 
 # Home page
 GET     /                           controllers.Application.index
+POST    /game                       controllers.Application.move
 
 
 POST    /_ah/channel/connected/     controllers.Application.connected

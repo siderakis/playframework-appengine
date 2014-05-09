@@ -58,6 +58,39 @@ GameManager.prototype.setup = function () {
   this.actuate();
 };
 
+
+// Set up the game
+GameManager.prototype.deserialize = function (json) {
+
+    var last = JSON.stringify(this.storageManager.getGameState());
+
+    if (last != json) {
+      var previousState = JSON.parse(json);
+
+      // Reload the game from a previous game if present
+      if (previousState) {
+          this.grid        = new Grid(previousState.grid.size,
+              previousState.grid.cells); // Reload grid
+          this.score       = previousState.score;
+          this.over        = previousState.over;
+          this.won         = previousState.won;
+          this.keepPlaying = previousState.keepPlaying;
+      } else {
+          this.grid        = new Grid(this.size);
+          this.score       = 0;
+          this.over        = false;
+          this.won         = false;
+          this.keepPlaying = false;
+
+          // Add the initial tiles
+          this.addStartTiles();
+      }
+
+      // Update the actuator
+      this.actuate(false);
+    }
+};
+
 // Set up the initial tiles to start the game with
 GameManager.prototype.addStartTiles = function () {
   for (var i = 0; i < this.startTiles; i++) {
@@ -76,7 +109,7 @@ GameManager.prototype.addRandomTile = function () {
 };
 
 // Sends the updated grid to the actuator
-GameManager.prototype.actuate = function () {
+GameManager.prototype.actuate = function (send) {
   if (this.storageManager.getBestScore() < this.score) {
     this.storageManager.setBestScore(this.score);
   }
@@ -86,6 +119,13 @@ GameManager.prototype.actuate = function () {
     this.storageManager.clearGameState();
   } else {
     this.storageManager.setGameState(this.serialize());
+  }
+
+  if (send) {
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.open("POST","/game",true);
+    xmlhttp.setRequestHeader("Content-type","text/json");
+    xmlhttp.send(JSON.stringify(this.serialize()));
   }
 
   this.actuator.actuate(this.grid, {
@@ -186,7 +226,7 @@ GameManager.prototype.move = function (direction) {
       this.over = true; // Game over!
     }
 
-    this.actuate();
+    this.actuate(true);
   }
 };
 
