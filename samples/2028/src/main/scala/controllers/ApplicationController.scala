@@ -57,11 +57,8 @@ object Application extends Controller {
       println(s"${who.clientId} just $did")
       if (who.isConnected) {
         connectedSet.add(who.clientId())
-        // store connected state for each token?
-        // doBackgroundStuff(who.clientId())
       } else {
         connectedSet.remove(who.clientId())
-        //        present.update("foo", present("foo") - token)
       }
       Ok("")
   }

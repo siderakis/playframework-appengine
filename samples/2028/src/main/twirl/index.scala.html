@@ -77,8 +77,9 @@
         <strong class="important">How to play:</strong> Use your <strong>arrow keys</strong> to move the tiles. When two tiles with the same number touch, they <strong>merge into one!</strong>
     </p>
     <hr>
+    <div style="font-size: 60%;">
     <p>
-        Multiplayer backend created by <a href="http://siderakis.com" target="_blank">Nick Siderakis</a>.
+        <a href="https://github.com/siderakis/playframework-appengine/blob/2048/samples/2028/src/main/scala/controllers/ApplicationController.scala" target="_blank">Multiplayer backend</a> created by <a href="http://siderakis.com" target="_blank">Nick Siderakis</a>.
     </p>
     <p>
         Frontend created by <a href="http://gabrielecirulli.com" target="_blank">Gabriele Cirulli</a>.
@@ -86,6 +87,7 @@
     <p>
         Based on <a href="https://itunes.apple.com/us/app/1024!/id823499224" target="_blank">1024 by Veewo Studio</a> and conceptually similar to <a href="http://asherv.com/threes/" target="_blank">Threes by Asher Vollmer.</a>
     </p>
+    </div>
 </div>
 
 <script src="/_ah/channel/jsapi"></script>
@@ -109,7 +111,12 @@
     channel = new goog.appengine.Channel('@token');
     socket = channel.open();
     socket.onopen = printVal;
-    socket.onmessage = function(data){ GAME.deserialize(data.data.trim()); };
+    socket.onmessage = function(data){
+        if(data.data.trim.startsWith('users')){
+
+        } else GAME.deserialize(data.data.trim());
+
+    };
     socket.onerror = printVal;
     socket.onclose = printVal;
 
