@@ -4,11 +4,12 @@
 
 # Home page
 GET     /                           controllers.Application.index
+
+# Receives a new game state and broadcasts the message to all connected users.
 POST    /game                       controllers.Application.move
 
-
+# Messages sent from the App Engine Channel API
+# https://developers.google.com/appengine/docs/java/channel/
 POST    /_ah/channel/connected/     controllers.Application.connected
 POST    /_ah/channel/disconnected/  controllers.Application.connected
 
-# Map static resources from the /public folder to the /assets URL path
-# GET     /assets/*file               controllers.Assets.at(path="/public", file)
