@@ -111,10 +111,9 @@
     channel = new goog.appengine.Channel('@token');
     socket = channel.open();
     socket.onopen = printVal;
-    socket.onmessage = function(data){
-        if(data.data.trim.startsWith('users')){
+    socket.onmessage = function(message){
 
-        } else GAME.deserialize(data.data.trim());
+      GAME.deserialize(message.data.trim());
 
     };
     socket.onerror = printVal;

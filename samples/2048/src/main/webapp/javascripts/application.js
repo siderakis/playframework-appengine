@@ -1,4 +1,4 @@
 // Wait till the browser is ready to render the game (avoids glitches)
-//window .requestAnimationFrame(function () {
-  var GAME = new GameManager(4, KeyboardInputManager, HTMLActuator, LocalStorageManager);
-//});
+window.requestAnimationFrame(function () {
+  window.GAME = new GameManager(4, KeyboardInputManager, HTMLActuator, LocalStorageManager);
+});
