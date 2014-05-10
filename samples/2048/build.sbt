@@ -2,7 +2,7 @@ import sbtappengine.Plugin.{AppengineKeys => gae}
 
 import play.PlayProject
 
-name := "2014"
+name := "2048"
 
 scalaVersion := "2.10.2"
 

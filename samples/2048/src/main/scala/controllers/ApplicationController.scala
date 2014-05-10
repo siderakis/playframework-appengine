@@ -1,43 +1,12 @@
 package controllers
 
-import play.api._
-import play.api.mvc._
-import com.google.appengine.api.channel.{ChannelFailureException, ChannelMessage, ChannelServiceFactory}
-import java.util.Date
-import twirl.api.Html
-import com.google.appengine.api.ThreadManager
-import play.api.libs.iteratee
-import scala.util.{Random, Failure, Success, Try}
-import scala.Some
-import scala.Some
-import play.api.libs.iteratee.Enumeratee.CheckDone
+import com.google.appengine.api.channel.{ChannelMessage, ChannelServiceFactory}
+import scala.util.Random
 import scala.collection.mutable
 import scala.io.Source
 
-//import play.api.libs.Comet
-
-import play.api.libs.iteratee._
-
-//import play.api.libs.concurrent._
-//import play.{Result, Controller}
-
 import play.api.mvc._
-import play.{Result, Controller}
-import javax.servlet.http.{HttpServletResponse, HttpServletRequest}
-import com.google.appengine.api.urlfetch.URLFetchServiceFactory
-import java.net.URL
-import scala.concurrent._
-
-// import ExecutionContextAE.ImplicitsAE._
-
-import play.api.mvc.DiscardingCookie
-import play.api.mvc.Cookie
-import scala.concurrent.duration._
-import scala.concurrent.duration.FiniteDuration
-
-//import play.api.libs.concurrent.Execution.Implicits.defaultContext
-
-import ExecutionContextAE.ImplicitsAE._
+import play.Controller
 
 
 //https://developers.google.com/appengine/docs/java/modules/#Java_Background_threads
@@ -67,7 +36,6 @@ object Application extends Controller {
 
     req =>
       val body = Source.fromInputStream(req.req.getInputStream).mkString
-      println(body)
 
       val channelService = ChannelServiceFactory.getChannelService
 
