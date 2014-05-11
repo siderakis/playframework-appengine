@@ -3,8 +3,28 @@ playframework-appengine
 
 Adapting the Play Framework's Core/MVC/Routing to work on Google App Engine
 
+## Samples
 
-##Status
+### 2048
+Simple multiplayer backend for the game 2048.
+
+[Code](https://github.com/siderakis/playframework-appengine/tree/master/samples/2048) [Live app](http://playframework-appengine-2048.ns-labs.appspot.com)
+
+Demonstrates:
+
+ - App Engine Channel API
+ - Play Templates
+ 
+### Basic Routing
+
+Demonstrates:
+
+ - App Engine URL Fetch API
+ - Async Action
+
+
+
+## Status
 
 1. Route Plugin (done)
 2. MVC, Action, Request, Response API ported to Servlets 2.5 (basics working)
