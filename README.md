@@ -8,7 +8,8 @@ Adapting the Play Framework's Core/MVC/Routing to work on Google App Engine
 ### 2048
 Simple multiplayer backend for the game 2048.
 
-[Code](https://github.com/siderakis/playframework-appengine/tree/master/samples/2048) [Live app](http://playframework-appengine-2048.ns-labs.appspot.com)
+ - [Code](https://github.com/siderakis/playframework-appengine/tree/master/samples/2048)
+ - [Live app](http://playframework-appengine-2048.ns-labs.appspot.com)
 
 Demonstrates:
 
