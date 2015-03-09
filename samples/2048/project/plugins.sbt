@@ -4,7 +4,7 @@ resolvers += "Scala AppEngine Sbt Repo" at "http://siderakis.github.com/maven"
 
 addSbtPlugin("com.siderakis" %% "playframework-appengine-routes" % "0.2-SNAPSHOT")
 
-addSbtPlugin("com.eed3si9n" % "sbt-appengine" % "0.6.0")
+addSbtPlugin("com.eed3si9n" % "sbt-appengine" % "0.6.2")
 
 // needed because sbt-twirl depends on twirl-compiler which is only available
 // at repo.spray.io
